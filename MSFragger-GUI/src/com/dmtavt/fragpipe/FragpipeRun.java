@@ -100,10 +100,12 @@ import com.github.chhh.utils.TimeUtils;
 import com.github.chhh.utils.UsageTrigger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -180,6 +182,12 @@ public class FragpipeRun {
         if (preparedWd == null) {
           log.debug("prepareWd() failed");
           return 1;
+        }
+        final Path logFile = preparedWd.resolve(String.format("log_%s.txt", TimeUtils.dateTimeNoSpaces()));
+        try {
+          tabRun.progsOutputWriter = Files.newBufferedWriter(logFile, StandardOpenOption.CREATE_NEW);
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
         }
       }
 
@@ -330,7 +338,8 @@ public class FragpipeRun {
         printReference();
         String totalTime = String.format("%.1f", (System.nanoTime() - startTime) * 1e-9 / 60);
         toConsole(Fragpipe.COLOR_RED_DARKEST, "\n=============================================================ALL JOBS DONE IN " + totalTime + " MINUTES=============================================================", true);
-        Bus.post(MessageSaveLog.saveInDir(wd));
+//        Bus.post(MessageSaveLog.saveInDir(wd));
+        tabRun.closeProgsOutputWriter();
 
         // save manifest file in GUI mode
         if (!Fragpipe.headless) {

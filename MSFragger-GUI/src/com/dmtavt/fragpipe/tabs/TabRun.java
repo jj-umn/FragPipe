@@ -56,6 +56,7 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -93,11 +94,20 @@ public class TabRun extends JPanelWithEnablement {
   private JPanel pTop;
   private JPanel pConsole;
   private UiCheck uiCheckWordWrap;
+  public BufferedWriter progsOutputWriter;
 
   public TabRun(TextConsole console) {
     this.console = console;
     init();
     initMore();
+  }
+
+  public void closeProgsOutputWriter() {
+    try {
+      progsOutputWriter.close();
+    } catch (IOException ex) {
+      throw new UncheckedIOException(ex);
+    }
   }
 
   private void initMore() {
@@ -131,6 +141,14 @@ public class TabRun extends JPanelWithEnablement {
       if (m.addNewline) {
         System.out.println();
       }
+    }
+    try {
+      progsOutputWriter.write(m.text);
+      if (m.addNewline)
+        progsOutputWriter.newLine();
+      progsOutputWriter.flush();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
     console.append(m.color, m.text);
     if (m.addNewline) {
@@ -204,8 +222,9 @@ public class TabRun extends JPanelWithEnablement {
       Bus.post(new MessageKillAll(REASON.USER_ACTION));
       Path existing = PathUtils.existing(getWorkdirText());
       if (existing != null) {
-        Bus.post(MessageSaveLog.saveInDir(existing));
+//        Bus.post(MessageSaveLog.saveInDir(existing));
       }
+      closeProgsOutputWriter();
     });
     JButton btnPrintCommands = UiUtils.createButton("Print Commands", e -> Bus.post(new MessageRun(true)));
     JButton btnExport = UiUtils.createButton("Export Log", e -> Bus.post(new MessageExportLog()));

@@ -26,6 +26,7 @@ import com.dmtavt.fragpipe.messages.MessageManifestSave;
 import com.dmtavt.fragpipe.messages.MessagePrintToConsole;
 import com.dmtavt.fragpipe.messages.MessageSaveLog;
 import com.dmtavt.fragpipe.process.ProcessResult;
+import com.dmtavt.fragpipe.tabs.TabRun;
 import com.github.chhh.utils.TimeUtils;
 import java.awt.Color;
 import java.io.IOException;
@@ -108,7 +109,8 @@ public class ProcessBuilderInfo {
               log.debug("Exit value not zero, killing all processes");
               Bus.post(new MessagePrintToConsole(Fragpipe.COLOR_RED, "Process returned non-zero exit code, stopping", true));
               Bus.post(new MessageKillAll(REASON.NON_ZERO_RETURN_FROM_PROCESS));
-              Bus.post(MessageSaveLog.saveInDir(wdPath));
+//              Bus.post(MessageSaveLog.saveInDir(wdPath));
+              Bus.getStickyEvent(TabRun.class).closeProgsOutputWriter();
 
               // save manifest file in GUI mode
               if (!Fragpipe.headless) {
