@@ -104,9 +104,17 @@ public class TabRun extends JPanelWithEnablement {
 
   public void closeProgsOutputWriter() {
     try {
-      progsOutputWriter.close();
-    } catch (IOException ex) {
-      throw new UncheckedIOException(ex);
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    synchronized (this) {
+      try {
+        progsOutputWriter.close();
+      } catch (IOException ex) {
+        throw new UncheckedIOException(ex);
+      }
+      progsOutputWriter = null;
     }
   }
 
@@ -142,13 +150,16 @@ public class TabRun extends JPanelWithEnablement {
         System.out.println();
       }
     }
-    try {
-      progsOutputWriter.write(m.text);
-      if (m.addNewline)
-        progsOutputWriter.newLine();
-      progsOutputWriter.flush();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+    synchronized (this) {
+      if (progsOutputWriter != null)
+        try {
+          progsOutputWriter.write(m.text);
+          if (m.addNewline)
+            progsOutputWriter.newLine();
+          progsOutputWriter.flush();
+        } catch (IOException e) {
+          throw new UncheckedIOException(e);
+        }
     }
     console.append(m.color, m.text);
     if (m.addNewline) {
